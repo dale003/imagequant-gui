@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ImageQuant 图片压缩工具</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">PNG QUANTIZER</p>
+          <h1>ImageQuant 图片压缩工具</h1>
+          <p class="subtitle">批量压缩 PNG，保留透明通道。内置 pngquant 与 libimagequant。</p>
+        </div>
+        <div class="engine-tag">本地处理 · 无需上传</div>
+      </header>
+
+      <section class="workspace">
+        <aside class="settings-card">
+          <h2>压缩设置</h2>
+          <label class="field-label" for="output-directory">输出目录</label>
+          <div class="path-row">
+            <input id="output-directory" type="text" readonly value="默认：图片原始文件夹" />
+            <button id="choose-output" class="button secondary">选择</button>
+            <button id="reset-output" class="button ghost">恢复默认</button>
+          </div>
+
+          <div class="setting-block">
+            <label class="field-label">质量范围</label>
+            <div class="range-row">
+              <input id="min-quality" type="number" min="0" max="100" value="65" />
+              <span>至</span>
+              <input id="max-quality" type="number" min="0" max="100" value="90" />
+            </div>
+            <p class="hint">推荐 65 - 90。质量越低，文件通常越小。</p>
+          </div>
+
+          <div class="setting-block">
+            <label class="field-label" for="colors">最大颜色数</label>
+            <select id="colors">
+              <option value="256" selected>256 色</option>
+              <option value="128">128 色</option>
+              <option value="64">64 色</option>
+              <option value="32">32 色</option>
+            </select>
+          </div>
+
+          <div class="setting-block">
+            <label class="field-label" for="speed">压缩速度</label>
+            <select id="speed">
+              <option value="1">最慢 · 质量优先</option>
+              <option value="3" selected>推荐 · 平衡</option>
+              <option value="6">较快</option>
+              <option value="10">最快</option>
+            </select>
+          </div>
+
+          <button id="compress" class="button primary" disabled>开始压缩</button>
+        </aside>
+
+        <section class="file-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>待处理图片</h2>
+              <p id="summary">尚未添加 PNG 图片</p>
+            </div>
+            <div class="toolbar">
+              <button id="clear-files" class="button ghost" disabled>清空</button>
+              <button id="add-files" class="button secondary">添加 PNG</button>
+            </div>
+          </div>
+
+          <div id="drop-zone" class="drop-zone">
+            <p class="drop-title">拖拽 PNG 图片到这里</p>
+            <p>或者点击右上角“添加 PNG”批量选择</p>
+          </div>
+
+          <div id="file-list" class="file-list"></div>
+
+          <footer class="result-footer">
+            <span id="result-summary">等待添加图片</span>
+            <button id="open-output" class="button ghost">打开输出目录</button>
+          </footer>
+        </section>
+      </section>
+    </main>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

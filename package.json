@@ -1,0 +1,48 @@
+{
+  "name": "imagequant-gui",
+  "version": "0.1.0",
+  "description": "Windows GUI for PNG compression powered by pngquant and libimagequant",
+  "main": "src/main.cjs",
+  "author": "",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "start": "electron .",
+    "dist:installer": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.local.imagequantgui",
+    "productName": "ImageQuant图片压缩工具",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "vendor/pngquant",
+        "to": "pngquant"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "ImageQuant图片压缩工具-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ImageQuant图片压缩工具"
+    }
+  }
+}
