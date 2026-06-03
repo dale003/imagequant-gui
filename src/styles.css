@@ -27,6 +27,9 @@ input:focus, select:focus { border-color: #168f83; box-shadow: 0 0 0 3px rgba(22
 .setting-block { margin-top: 20px; }
 .range-row { display: grid; grid-template-columns: 1fr 24px 1fr; gap: 6px; align-items: center; text-align: center; color: #8794a5; }
 .hint { margin: 8px 0 0; color: #8491a2; font-size: 12px; line-height: 1.6; }
+.hint.warning { color: #9a6a18; }
+.check-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #405069; font-size: 13px; font-weight: 700; }
+.check-row input { width: 16px; height: 16px; flex: 0 0 auto; margin: 0; padding: 0; }
 .button { border: 0; border-radius: 8px; padding: 9px 13px; cursor: pointer; font-size: 13px; font-weight: 700; transition: .18s ease; }
 .button:hover:not(:disabled) { transform: translateY(-1px); }
 .button:disabled { cursor: not-allowed; opacity: .45; }

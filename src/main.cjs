@@ -30,14 +30,14 @@ function getPngquantPath() {
   return path.join(__dirname, '..', 'vendor', 'pngquant', 'pngquant.exe');
 }
 
-function runPngquant(inputPath, outputPath, options) {
+function runPngquantOnce(inputPath, outputPath, options, minQuality) {
   return new Promise((resolve, reject) => {
     const binary = getPngquantPath();
     const args = [
       '--force',
       '--skip-if-larger',
       '--quality',
-      `${options.minQuality}-${options.maxQuality}`,
+      `${minQuality}-${options.maxQuality}`,
       '--speed',
       String(options.speed),
       '--output',
@@ -55,7 +55,7 @@ function runPngquant(inputPath, outputPath, options) {
     child.on('error', reject);
     child.on('close', (code) => {
       if (code === 0) {
-        resolve({ outputPath, skipped: false });
+        resolve({ outputPath, skipped: false, qualityMinUsed: minQuality });
         return;
       }
       if (code === 98 || code === 99) {
@@ -71,6 +71,26 @@ function runPngquant(inputPath, outputPath, options) {
   });
 }
 
+async function runPngquant(inputPath, outputPath, options) {
+  const firstAttempt = await runPngquantOnce(inputPath, outputPath, options, options.minQuality);
+  if (!firstAttempt.skipped || firstAttempt.skipReason !== 'quality' || !options.autoLowerQuality) {
+    return firstAttempt;
+  }
+
+  const fallbackMinimums = [50, 35, 0].filter((quality) => quality < options.minQuality);
+  let latestResult = firstAttempt;
+  for (const minQuality of fallbackMinimums) {
+    latestResult = await runPngquantOnce(inputPath, outputPath, options, minQuality);
+    if (!latestResult.skipped) {
+      return { ...latestResult, autoLoweredQuality: true };
+    }
+    if (latestResult.skipReason === 'larger') {
+      return latestResult;
+    }
+  }
+  return latestResult;
+}
+
 function uniqueOutputPath(outputDirectory, filePath) {
   const extension = path.extname(filePath);
   const name = path.basename(filePath, extension);
@@ -82,6 +102,12 @@ function uniqueOutputPath(outputDirectory, filePath) {
     suffix += 1;
   }
   return outputPath;
+}
+
+function temporaryOutputPath(outputDirectory, filePath, index) {
+  const extension = path.extname(filePath);
+  const name = path.basename(filePath, extension);
+  return path.join(outputDirectory, `.${name}-imagequant-${process.pid}-${Date.now()}-${index}${extension}`);
 }
 
 ipcMain.handle('select-images', async () => {
@@ -122,8 +148,11 @@ ipcMain.handle('compress-images', async (event, request) => {
     const inputPath = files[index];
     const inputSize = fs.statSync(inputPath).size;
     const targetDirectory = outputDirectory || path.dirname(inputPath);
+    const shouldOverwriteOriginal = !outputDirectory;
     fs.mkdirSync(targetDirectory, { recursive: true });
-    const outputPath = uniqueOutputPath(targetDirectory, inputPath);
+    const outputPath = shouldOverwriteOriginal
+      ? temporaryOutputPath(targetDirectory, inputPath, index)
+      : uniqueOutputPath(targetDirectory, inputPath);
     event.sender.send('compression-progress', {
       index,
       status: 'processing'
@@ -131,14 +160,23 @@ ipcMain.handle('compress-images', async (event, request) => {
 
     try {
       const result = await runPngquant(inputPath, outputPath, options);
-      const outputSize = result.skipped ? inputSize : fs.statSync(outputPath).size;
+      if (result.skipped && fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+      }
+      if (!result.skipped && shouldOverwriteOriginal) {
+        fs.renameSync(outputPath, inputPath);
+      }
+      const finalOutputPath = result.skipped ? inputPath : (shouldOverwriteOriginal ? inputPath : outputPath);
+      const outputSize = result.skipped ? inputSize : fs.statSync(finalOutputPath).size;
       const item = {
         inputPath,
-        outputPath: result.outputPath,
+        outputPath: finalOutputPath,
         inputSize,
         outputSize,
         skipped: result.skipped,
         skipReason: result.skipReason || null,
+        autoLoweredQuality: Boolean(result.autoLoweredQuality),
+        qualityMinUsed: result.qualityMinUsed ?? null,
         error: null
       };
       results.push(item);
@@ -148,6 +186,9 @@ ipcMain.handle('compress-images', async (event, request) => {
         result: item
       });
     } catch (error) {
+      if (fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+      }
       const item = {
         inputPath,
         outputPath: null,

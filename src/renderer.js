@@ -15,6 +15,7 @@ const elements = {
   summary: document.querySelector('#summary'),
   resultSummary: document.querySelector('#result-summary'),
   outputDirectory: document.querySelector('#output-directory'),
+  autoLowerQuality: document.querySelector('#auto-lower-quality'),
   openOutput: document.querySelector('#open-output')
 };
 
@@ -56,8 +57,10 @@ function render() {
     row.className = 'file-item';
     const status = item.status === 'processing'
       ? '压缩中...'
-      : item.status === 'done'
-        ? `已节省 ${Math.max(0, 100 - (item.result.outputSize / item.result.inputSize * 100)).toFixed(1)}%`
+        : item.status === 'done'
+        ? item.result.autoLoweredQuality
+          ? `已节省 ${Math.max(0, 100 - (item.result.outputSize / item.result.inputSize * 100)).toFixed(1)}% · 已自动降低质量`
+          : `已节省 ${Math.max(0, 100 - (item.result.outputSize / item.result.inputSize * 100)).toFixed(1)}%`
         : item.status === 'skipped'
           ? item.result.skipReason === 'quality'
             ? '已跳过：无法达到最低质量'
@@ -90,10 +93,11 @@ function validateOptions() {
   const maxQuality = Number(document.querySelector('#max-quality').value);
   const colors = Number(document.querySelector('#colors').value);
   const speed = Number(document.querySelector('#speed').value);
+  const autoLowerQuality = elements.autoLowerQuality.checked;
   if (minQuality < 0 || maxQuality > 100 || minQuality > maxQuality) {
     throw new Error('质量范围需要设置为 0 - 100，且左侧数值不能大于右侧。');
   }
-  return { minQuality, maxQuality, colors, speed };
+  return { minQuality, maxQuality, colors, speed, autoLowerQuality };
 }
 
 elements.addFiles.addEventListener('click', async () => addFiles(await window.imageQuant.selectImages()));
@@ -106,7 +110,7 @@ elements.chooseOutput.addEventListener('click', async () => {
 });
 elements.resetOutput.addEventListener('click', () => {
   state.outputDirectory = '';
-  elements.outputDirectory.value = '默认：图片原始文件夹';
+  elements.outputDirectory.value = '默认：原目录，压缩成功后覆盖原图';
 });
 elements.clearFiles.addEventListener('click', () => {
   state.files = [];

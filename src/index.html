@@ -22,10 +22,11 @@
           <h2>压缩设置</h2>
           <label class="field-label" for="output-directory">输出目录</label>
           <div class="path-row">
-            <input id="output-directory" type="text" readonly value="默认：图片原始文件夹" />
+            <input id="output-directory" type="text" readonly value="默认：原目录，压缩成功后覆盖原图" />
             <button id="choose-output" class="button secondary">选择</button>
             <button id="reset-output" class="button ghost">恢复默认</button>
           </div>
+          <p class="hint warning">未选择输出目录时会覆盖原图；选择输出目录后会另存为压缩副本。</p>
 
           <div class="setting-block">
             <label class="field-label">质量范围</label>
@@ -35,6 +36,10 @@
               <input id="max-quality" type="number" min="0" max="100" value="90" />
             </div>
             <p class="hint">推荐 65 - 90。质量越低，文件通常越小。</p>
+            <label class="check-row">
+              <input id="auto-lower-quality" type="checkbox" />
+              <span>自动降低最低质量以尽量压缩</span>
+            </label>
           </div>
 
           <div class="setting-block">
